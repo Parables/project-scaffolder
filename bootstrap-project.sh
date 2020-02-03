@@ -9,6 +9,7 @@ i='\e[96m|-- < ';
 r='\e[34m';
 nf='\e[0m';
 o='         |-- ';
+m='\e[96m| \e[0m           |-- ';
 
 # Prints out a Star bordered text
 printStars(){
@@ -34,11 +35,7 @@ deployProject(){
     printStars "Deploy Project"
     read -e -p "Do you want to deploy your project(Y/n)? :   " -i "Y" choice ;printf $nf;
     if [  $choice != "No"  ] ||  [ $choice != "nO"  ] || [ $choice != "n" ]  ||  [ $choice != "NO"   ]; then
-        printf "$q Where do you want to deploy your project: $nf
-$l $nf          |-- 1. Heroku
-$l $nf          |-- 2. Qovery
-$l $nf          |-- 3. Now
-        $l $nf          |-- 4. Surge \n"
+        printf "$q Where do you want to deploy your project: $nf $m 1. Heroku \n$m  2. Qovery \n$m 3. Now\n $m 4. Surge \n"
         printf "$i Enter the number corresponding to your option: $r"; read $deployTo; printf $nf;
         if [ $deployTo = 1 ]
         then printStars "Deploying to Heroku";
@@ -110,12 +107,8 @@ new_svelte_app() {
 
 printStars  "Creating your HelloWorld Project just got easy"
 printf "$q Which project do you want to create: $nf
-$l $nf    *** Web Projects ***
-$l $nf          |-- 1. Vue CLI template
-$l $nf          |-- 2. Svelte default template
-$l $nf          |-- 3. NodeJs basic template
-$l $nf    *** Mobile Projects ***
-$l $nf          |-- 4. Blank Flutter template \n"
+$l $nf    *** Web Projects *** \n$m 1. Vue CLI template \n$m 2. Svelte default template \n$m 3. NodeJs basic template
+$l $nf    *** Mobile Projects *** \n$m 4. Blank Flutter template \n"
 printf "$i Enter the number corresponding to your option: $r"; read projectNo; printf $nf;
 if [ $projectNo = 1 ]
 then echo "Good, I like Apples";
