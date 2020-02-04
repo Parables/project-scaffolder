@@ -61,6 +61,46 @@ allow_external_connetion(){
 svelte_with_rollup(){ # $1 is the projectName
     npx degit sveltejs/template $1
     cd $1
+    
+    printStars "Installing required packages"
+    read -e -p "Do you want to add TailwindCss(Y/n)? :   " -i "Y" choice ;printf $nf;
+    if [  $choice != "No"  ] ||  [ $choice != "nO"  ] || [ $choice != "n" ]  ||  [ $choice != "NO"   ]; then
+        printStars "Adding TailwindCss"
+        npm install tailwindcss postcss-cli --save-dev
+        npm install @fullhuman/postcss-purgecss
+        ./node_modules/.bin/tailwind init tailwind.js
+        
+        touch postcss.config.js  && printf 'const tailwindcss = require("tailwindcss");
+
+// only needed if you want to purge
+const purgecss = require("@fullhuman/postcss-purgecss")({
+  content: ["./src/**/*.svelte", "./public/**/*.html"],
+  defaultExtractor: content => content.match(/[A-Za-z0-9-_:/]+/g) || []
+});
+
+module.exports = {
+  plugins: [
+    tailwindcss("./tailwind.js"),
+
+    // only needed if you want to purge
+    ...(process.env.NODE_ENV === "production" ? [purgecss] : [])
+  ]
+        };' >> postcss.config.js ;
+        
+        touch public/tailwind.css && printf '
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;' >> public/tailwind.css ;
+        
+        sed -i 's_"build": "rollup -c",_"build": "npm run build:tailwind \&\& rollup -c",_gI' package.json
+        sed -i 's_"dev": "rollup -c -w",_"dev": "run-p start:dev autobuild watch:build",_gI' package.json
+        sed -i '/"start": "sirv public"/a\
+    ,"watch:tailwind": "postcss public\/tailwind.css -o public\/index.css -w",\
+        "build:tailwind": "NODE_ENV=production postcss public\/tailwind.css -o public\/index.css"' package.json;
+        
+        sed -i '/title\>/\<link rel\="stylesheet" href\="index.css" \/>/gI' public/index.html
+    fi
+    
     printStars "Starting up  your editor & app"
     npm install
     npm run build;
@@ -102,71 +142,18 @@ new_svelte_app() {
     fi;
 }
 
-createFile(){
-    touch package.json && printf '{
-  "name": "svelte-app",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "start": "sirv public"
-  },
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^11.0.0",
-    "@rollup/plugin-node-resolve": "^7.0.0",
-    "rollup": "^1.20.0",
-    "rollup-plugin-livereload": "^1.0.0",
-    "rollup-plugin-svelte": "^5.0.3",
-    "rollup-plugin-terser": "^5.1.2",
-    "svelte": "^3.0.0"
-  },
-  "dependencies": {
-    "sirv-cli": "^0.4.4"
-  }
-}
-    '>> package.json
-}
-
-editFile(){
-    cd $projectDir && [ -d $projectDir/Svelte ] || mkdir $projectDir/Svelte;
-    cd $projectDir/Svelte
-    createFile;
-    
-    sed -i 's_"build": "rollup -c",_"build": "npm run build:tailwind \&\& rollup -c",_gI' package.json
-    sed -i 's_"dev": "rollup -c -w",_"dev": "run-p start:dev autobuild watch:build",_gI' package.json 
-    sed -i '/"start": "sirv public"/a\
-    ,"watch:tailwind": "postcss public\/tailwind.css -o public\/index.css -w",\
-    "build:tailwind": "NODE_ENV=production postcss public\/tailwind.css -o public\/index.css"' package.json;
-    loopApp
-}
-
-loopApp(){
-    printStars  "Creating your HelloWorld Project just got easy"
-    printf "$q Which project do you want to create: $nf
-$l $nf    *** Web Projects *** \n$m 1. Vue CLI template \n$m 2. Svelte default template \n$m 3. NodeJs basic template
-    $l $nf    *** Mobile Projects *** \n$m 4. Blank Flutter template \n"
-    printf "$i Enter the number corresponding to your option: $r"; read projectNo; printf $nf;
-    if [ $projectNo = 1 ]
-    then editFile;
-    elif [ $projectNo = 2 ]
-    then    new_svelte_app;
-    elif [ $projectNo = 3 ]
-    then createFile;
-    else echo "Oh no, I hate Oranges!";
-    fi;
-}
-
+# Script Entry point
 printStars  "Creating your HelloWorld Project just got easy"
 printf "$q Which project do you want to create: $nf
 $l $nf    *** Web Projects *** \n$m 1. Vue CLI template \n$m 2. Svelte default template \n$m 3. NodeJs basic template
 $l $nf    *** Mobile Projects *** \n$m 4. Blank Flutter template \n"
 printf "$i Enter the number corresponding to your option: $r"; read projectNo; printf $nf;
 if [ $projectNo = 1 ]
-then editFile;
+then echo "option 1"
 elif [ $projectNo = 2 ]
 then    new_svelte_app;
 elif [ $projectNo = 3 ]
-then createFile;
+then echo "option 3"
 else echo "Oh no, I hate Oranges!";
 fi;
 
