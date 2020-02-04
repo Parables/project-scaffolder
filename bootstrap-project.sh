@@ -34,9 +34,10 @@ deploy_to_surge(){
 deployProject(){
     printStars "Deploy Project"
     read -e -p "Do you want to deploy your project(Y/n)? :   " -i "Y" choice ;printf $nf;
+    echo $choice;
     if [  $choice != "No"  ] ||  [ $choice != "nO"  ] || [ $choice != "n" ]  ||  [ $choice != "NO"   ]; then
         printf "$q Where do you want to deploy your project: $nf \n$m 1. Heroku \n$m 2. Qovery \n$m 3. Now\n$m 4. Surge \n"
-        printf "$i Enter the number corresponding to your option: $r"; read $deployTo; printf $nf;
+        printf "$i Enter the number corresponding to your option: $r"; read deployTo; printf $nf;
         if [ $deployTo = 1 ]
         then printStars "Deploying to Heroku";
         elif [ $deployTo = 2 ]
@@ -63,13 +64,13 @@ svelte_with_rollup(){ # $1 is the projectName
     cd $1
     
     printStars "Installing required packages"
-    read -e -p "Do you want to add TailwindCss(Y/n)? :   " -i "Y" choice ;printf $nf;
+    read -e -p "Do you want to add TailwindCss(Y/n)? :   "  choice ;printf $nf;
     if [  $choice != "No"  ] ||  [ $choice != "nO"  ] || [ $choice != "n" ]  ||  [ $choice != "NO"   ]; then
         printStars "Adding TailwindCss"
         npm install tailwindcss postcss-cli --save-dev
         npm install @fullhuman/postcss-purgecss
         ./node_modules/.bin/tailwind init tailwind.js
-        
+        npm install npm-run-all --save-dev
         touch postcss.config.js  && printf 'const tailwindcss = require("tailwindcss");
 
 // only needed if you want to purge
@@ -93,12 +94,32 @@ module.exports = {
         @tailwind utilities;' >> public/tailwind.css ;
         
         sed -i 's_"build": "rollup -c",_"build": "npm run build:tailwind \&\& rollup -c",_gI' package.json
-        sed -i 's_"dev": "rollup -c -w",_"dev": "run-p start:dev autobuild watch:build",_gI' package.json
+        sed -i 's_"dev": "rollup -c -w",_"dev": "run-p start:dev autobuild --watch:build",_gI' package.json
         sed -i '/"start": "sirv public"/a\
     ,"watch:tailwind": "postcss public\/tailwind.css -o public\/index.css -w",\
-        "build:tailwind": "NODE_ENV=production postcss public\/tailwind.css -o public\/index.css"' package.json;
-        
-        sed -i '/title\>/\<link rel\="stylesheet" href\="index.css" \/>/gI' public/index.html
+        "build:tailwind": "NODE_ENV=production postcss public\/tailwind.css -o public\/index.css",\
+        "start:dev": "sirv public --dev",\
+         "autobuild": "rollup -c -w"' package.json;
+
+         touch index.html && printf "<!doctype html>
+<html>
+
+<head>
+	<meta charset='utf8'>
+	<meta name='viewport' content='width=device-width'>
+
+	<title>Svelte app</title>
+
+	<link rel='icon' type='image/png' href='favicon.png'>
+	<link rel='stylesheet' href='global.css'>
+	<link rel='stylesheet' href='bundle.css'>
+	<link rel='stylesheet' href='index.css'>
+</head>
+
+<body>
+	<script src='bundle.js'></script>
+</body>
+" >> index.html;
     fi
     
     printStars "Starting up  your editor & app"
@@ -142,6 +163,8 @@ new_svelte_app() {
     fi;
 }
 
+
+
 # Script Entry point
 printStars  "Creating your HelloWorld Project just got easy"
 printf "$q Which project do you want to create: $nf
@@ -149,7 +172,7 @@ $l $nf    *** Web Projects *** \n$m 1. Vue CLI template \n$m 2. Svelte default t
 $l $nf    *** Mobile Projects *** \n$m 4. Blank Flutter template \n"
 printf "$i Enter the number corresponding to your option: $r"; read projectNo; printf $nf;
 if [ $projectNo = 1 ]
-then echo "option 1"
+then echo "option 1";
 elif [ $projectNo = 2 ]
 then    new_svelte_app;
 elif [ $projectNo = 3 ]
