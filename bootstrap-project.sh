@@ -35,7 +35,7 @@ deployProject(){
     printStars "Deploy Project"
     read -e -p "Do you want to deploy your project(Y/n)? :   " -i "Y" choice ;printf $nf;
     if [  $choice != "No"  ] ||  [ $choice != "nO"  ] || [ $choice != "n" ]  ||  [ $choice != "NO"   ]; then
-        printf "$q Where do you want to deploy your project: $nf $m 1. Heroku \n$m  2. Qovery \n$m 3. Now\n $m 4. Surge \n"
+        printf "$q Where do you want to deploy your project: $nf \n$m 1. Heroku \n$m 2. Qovery \n$m 3. Now\n$m 4. Surge \n"
         printf "$i Enter the number corresponding to your option: $r"; read $deployTo; printf $nf;
         if [ $deployTo = 1 ]
         then printStars "Deploying to Heroku";
@@ -48,7 +48,6 @@ deployProject(){
         then printStars "Deploying to Surge";
             deploy_to_surge
         else echo "Invalid option selected... ";
-            deployProject;
         fi;
     fi
 }
@@ -60,15 +59,14 @@ allow_external_connetion(){
 
 # Creates a new Svelte Project with Rollup (default)
 svelte_with_rollup(){ # $1 is the projectName
-    npx degit sarioglu/svelte-tailwindcss-template $1
+    npx degit sveltejs/template $1
     cd $1
-    printStars "Install required packages"
-    npm install
     printStars "Starting up  your editor & app"
-    npm run dev;
+    npm install
     npm run build;
     deployProject;
     code -n  $projectDir/Svelte/$1;
+    npm run dev;
 }
 
 
@@ -104,6 +102,59 @@ new_svelte_app() {
     fi;
 }
 
+createFile(){
+    touch package.json && printf '{
+  "name": "svelte-app",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "start": "sirv public"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.0",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "rollup": "^1.20.0",
+    "rollup-plugin-livereload": "^1.0.0",
+    "rollup-plugin-svelte": "^5.0.3",
+    "rollup-plugin-terser": "^5.1.2",
+    "svelte": "^3.0.0"
+  },
+  "dependencies": {
+    "sirv-cli": "^0.4.4"
+  }
+}
+    '>> package.json
+}
+
+editFile(){
+    cd $projectDir && [ -d $projectDir/Svelte ] || mkdir $projectDir/Svelte;
+    cd $projectDir/Svelte
+    createFile;
+    
+    sed -i 's_"build": "rollup -c",_"build": "npm run build:tailwind \&\& rollup -c",_gI' package.json
+    sed -i 's_"dev": "rollup -c -w",_"dev": "run-p start:dev autobuild watch:build",_gI' package.json 
+    sed -i '/"start": "sirv public"/a\
+    ,"watch:tailwind": "postcss public\/tailwind.css -o public\/index.css -w",\
+    "build:tailwind": "NODE_ENV=production postcss public\/tailwind.css -o public\/index.css"' package.json;
+    loopApp
+}
+
+loopApp(){
+    printStars  "Creating your HelloWorld Project just got easy"
+    printf "$q Which project do you want to create: $nf
+$l $nf    *** Web Projects *** \n$m 1. Vue CLI template \n$m 2. Svelte default template \n$m 3. NodeJs basic template
+    $l $nf    *** Mobile Projects *** \n$m 4. Blank Flutter template \n"
+    printf "$i Enter the number corresponding to your option: $r"; read projectNo; printf $nf;
+    if [ $projectNo = 1 ]
+    then editFile;
+    elif [ $projectNo = 2 ]
+    then    new_svelte_app;
+    elif [ $projectNo = 3 ]
+    then createFile;
+    else echo "Oh no, I hate Oranges!";
+    fi;
+}
 
 printStars  "Creating your HelloWorld Project just got easy"
 printf "$q Which project do you want to create: $nf
@@ -111,11 +162,11 @@ $l $nf    *** Web Projects *** \n$m 1. Vue CLI template \n$m 2. Svelte default t
 $l $nf    *** Mobile Projects *** \n$m 4. Blank Flutter template \n"
 printf "$i Enter the number corresponding to your option: $r"; read projectNo; printf $nf;
 if [ $projectNo = 1 ]
-then echo "Good, I like Apples";
+then editFile;
 elif [ $projectNo = 2 ]
 then    new_svelte_app;
 elif [ $projectNo = 3 ]
-then echo "Good, I like Bananas";
+then createFile;
 else echo "Oh no, I hate Oranges!";
 fi;
 
