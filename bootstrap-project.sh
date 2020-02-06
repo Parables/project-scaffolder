@@ -99,9 +99,10 @@ module.exports = {
     ,"watch:tailwind": "postcss public\/tailwind.css -o public\/index.css -w",\
         "build:tailwind": "NODE_ENV=production postcss public\/tailwind.css -o public\/index.css",\
         "start:dev": "sirv public --dev",\
-         "autobuild": "rollup -c -w"' package.json;
-
-         touch index.html && printf "<!doctype html>
+        "autobuild": "rollup -c -w"' package.json;
+        
+        rm public/index.html;
+        touch public/index.html && printf "<!doctype html>
 <html>
 
 <head>
@@ -112,14 +113,14 @@ module.exports = {
 
 	<link rel='icon' type='image/png' href='favicon.png'>
 	<link rel='stylesheet' href='global.css'>
-	<link rel='stylesheet' href='bundle.css'>
+	<link rel='stylesheet' href='build/bundle.css'>
 	<link rel='stylesheet' href='index.css'>
 </head>
 
 <body>
-	<script src='bundle.js'></script>
+	<script src='build/bundle.js'></script>
 </body>
-" >> index.html;
+        " >> public/index.html;
     fi
     
     printStars "Starting up  your editor & app"
