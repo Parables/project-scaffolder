@@ -134,15 +134,15 @@ module.exports = {
 
 # Creates a new Svelte Project with Parcel
 svelte_with_parcel(){ # $1 is the projectName
-    npx degit iljoo/svelte-tailwind-parcel-starter $1
+    npx degit Parables/svelte-tailwindcss-parcel-template $1
     cd $1
-    printStars "Install required packages"
-    yarn
+    printStars "Installing dependencies"
+    npm install
     printStars "Starting up  your editor & app"
-    yarn start;
-    yarn build;
+    code .
     deployProject;
-    code -n  $projectDir/Svelte/$1;
+    npm start;
+    npm build;
 }
 
 
